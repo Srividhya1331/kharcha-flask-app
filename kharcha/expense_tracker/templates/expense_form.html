@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit expense' if expense else 'Add expense' }}{% endblock %}
+{% block content %}
+<section class="auth">
+  <h1>{{ 'Edit expense' if expense else 'Add expense' }}</h1>
+  <form method="post" class="stack" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Description
+      <input type="text" name="description" value="{{ values.get('description', '') }}" maxlength="200" required autofocus>
+      {% if errors.description %}<span class="field-error">{{ errors.description }}</span>{% endif %}
+    </label>
+    <label>Amount (₹)
+      <input type="text" inputmode="decimal" name="amount" value="{{ values.get('amount', '') }}" placeholder="450.00" required>
+      {% if errors.amount %}<span class="field-error">{{ errors.amount }}</span>{% endif %}
+    </label>
+    <label>Date
+      <input type="date" name="spent_on" value="{{ values.get('spent_on', '') }}" required>
+      {% if errors.spent_on %}<span class="field-error">{{ errors.spent_on }}</span>{% endif %}
+    </label>
+    <label>Category
+      <select name="category_id" required>
+        <option value="">Choose a category</option>
+        {% for c in categories %}
+          <option value="{{ c.id }}" {% if values.get('category_id')|string == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.category_id %}<span class="field-error">{{ errors.category_id }}</span>{% endif %}
+    </label>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Save expense</button>
+      <a href="{{ url_for('main.expenses') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

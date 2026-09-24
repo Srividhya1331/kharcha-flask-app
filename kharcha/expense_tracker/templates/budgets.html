@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Budgets{% endblock %}
+{% block content %}
+<section class="auth">
+  <h1>Budgets</h1>
+  <div class="month-switch">
+    <a href="{{ url_for('main.budgets', month=prev_month) }}" aria-label="Previous month">&lsaquo;</a>
+    <span>{{ month|month_label }}</span>
+    <a href="{{ url_for('main.budgets', month=next_month) }}" aria-label="Next month">&rsaquo;</a>
+  </div>
+  <p class="muted">Set a monthly limit per category. Leave a field empty for no limit.</p>
+  <form method="post" class="stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="month" value="{{ month }}">
+    {% for c in categories %}
+    <label>{{ c.name }} (₹)
+      <input type="text" inputmode="decimal" name="limit_{{ c.id }}"
+             value="{{ posted.get('limit_' ~ c.id, '') if posted else (paise_to_str(existing[c.id].limit_paise) if c.id in existing else '') }}">
+    </label>
+    {% endfor %}
+    <button class="btn btn-primary" type="submit">Save budgets</button>
+  </form>
+</section>
+{% endblock %}

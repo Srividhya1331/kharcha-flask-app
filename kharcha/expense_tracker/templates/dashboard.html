@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-figure">
+    <div class="month-switch">
+      <a href="{{ url_for('main.dashboard', month=prev_month) }}" aria-label="Previous month">&lsaquo;</a>
+      <span>{{ month|month_label }}</span>
+      {% if is_current %}<span class="disabled" aria-hidden="true">&rsaquo;</span>
+      {% else %}<a href="{{ url_for('main.dashboard', month=next_month) }}" aria-label="Next month">&rsaquo;</a>{% endif %}
+    </div>
+    <p class="big-number">{{ total|inr }}</p>
+    <p class="muted">
+      spent
+      {% if prev_total %}
+        {% set diff = total - prev_total %}
+        &mdash; {{ diff|abs|inr }} {{ 'more' if diff > 0 else 'less' }} than {{ prev_month|month_label }}
+      {% else %}
+        &mdash; nothing recorded in {{ prev_month|month_label }} to compare with
+      {% endif %}
+    </p>
+  </div>
+
+  <figure class="trend" aria-label="Spending over the last six months">
+    {% for p in trend %}
+      <div class="trend-col {% if p.month == month %}is-selected{% endif %}">
+        <span class="trend-value">{{ '%.0f'|format(p.total / 100 / 1000) }}k</span>
+        <span class="trend-bar" style="height: {{ [p.pct, 3]|max }}%"></span>
+        <span class="trend-label">{{ p.label }}</span>
+      </div>
+    {% endfor %}
+  </figure>
+</section>
+
+{% if not total %}
+  <section class="empty">
+    <h2>No expenses in {{ month|month_label }}</h2>
+    <p>Add an expense to see your category breakdown and budget progress here.</p>
+    <a class="btn btn-primary" href="{{ url_for('main.new_expense') }}">Add expense</a>
+  </section>
+{% else %}
+<div class="two-col">
+  <section>
+    <h2>Where it went</h2>
+    <ul class="bars">
+      {% for row in by_category %}
+      <li>
+        <div class="bar-head"><span>{{ row.category }}</span><span class="num">{{ row.total|inr }}</span></div>
+        <div class="track"><div class="fill" style="width: {{ row.pct }}%"></div></div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section>
+    <h2>Budgets</h2>
+    {% if budgets %}
+    <ul class="bars">
+      {% for b in budgets %}
+      <li>
+        <div class="bar-head">
+          <span>{{ b.category }}</span>
+          <span class="num">{{ b.spent|inr }} of {{ b.budget_limit|inr }}</span>
+        </div>
+        <div class="track"><div class="fill fill-{{ b.status }}" style="width: {{ b.pct }}%"></div></div>
+        <p class="bar-note note-{{ b.status }}">
+          {% if b.status == 'over' %}Over budget by {{ (-b.remaining)|inr }}
+          {% elif b.status == 'warn' %}Only {{ b.remaining|inr }} left
+          {% else %}{{ b.remaining|inr }} left{% endif %}
+        </p>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      <p class="muted">No budgets set for {{ month|month_label }}.</p>
+    {% endif %}
+    <a href="{{ url_for('main.budgets', month=month) }}">Set budgets</a>
+  </section>
+</div>
+{% endif %}
+
+{% if recent %}
+<section>
+  <h2>Latest expenses</h2>
+  <table class="table">
+    <thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="right">Amount</th></tr></thead>
+    <tbody>
+    {% for e in recent %}
+      <tr>
+        <td>{{ e.spent_on.strftime('%d %b') }}</td>
+        <td>{{ e.description }}</td>
+        <td>{{ e.category.name }}</td>
+        <td class="right num">{{ e.amount_paise|inr }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <a href="{{ url_for('main.expenses') }}">See all expenses</a>
+</section>
+{% endif %}
+{% endblock %}
